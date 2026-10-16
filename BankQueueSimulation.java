@@ -42,10 +42,10 @@ public class BankQueueSimulation {
         JPanel form = new JPanel(new GridLayout(5, 2, 12, 14));
         form.setBackground(Color.WHITE);
         customersField = addField(form, "Total customers", "100");
-        minArrivalField = addField(form, "Minimum interarrival (min)", "1");
-        maxArrivalField = addField(form, "Maximum interarrival (min)", "5");
-        minServiceField = addField(form, "Minimum service (min)", "1");
-        maxServiceField = addField(form, "Maximum service (min)", "6");
+        minArrivalField = addField(form, "Minimum interarrival (min)", "1.0");
+        maxArrivalField = addField(form, "Maximum interarrival (min)", "5.0");
+        minServiceField = addField(form, "Minimum service (min)", "1.0");
+        maxServiceField = addField(form, "Maximum service (min)", "6.0");
         page.add(form, BorderLayout.CENTER);
 
         JButton run = new JButton("Run Simulation");
@@ -70,58 +70,66 @@ public class BankQueueSimulation {
     private void runSimulation() {
         try {
             int count = Integer.parseInt(customersField.getText().trim());
-            int minArrival = Integer.parseInt(minArrivalField.getText().trim());
-            int maxArrival = Integer.parseInt(maxArrivalField.getText().trim());
-            int minService = Integer.parseInt(minServiceField.getText().trim());
-            int maxService = Integer.parseInt(maxServiceField.getText().trim());
+            double minArrival = Double.parseDouble(minArrivalField.getText().trim());
+            double maxArrival = Double.parseDouble(maxArrivalField.getText().trim());
+            double minService = Double.parseDouble(minServiceField.getText().trim());
+            double maxService = Double.parseDouble(maxServiceField.getText().trim());
             if (count < 1 || count > 10000 || minArrival < 1 || minService < 1
                     || maxArrival < minArrival || maxService < minService
-                    || maxArrival > 10000 || maxService > 10000) {
+                    || maxArrival > 10000 || maxService > 10000
+                    || !Double.isFinite(minArrival) || !Double.isFinite(maxArrival)
+                    || !Double.isFinite(minService) || !Double.isFinite(maxService)) {
                 throw new NumberFormatException();
             }
 
             Random random = new Random();
             Object[][] rows = new Object[count][8];
-            int arrival = 0, previousDeparture = 0;
-            int totalService = 0, totalWait = 0, totalSystem = 0, totalIdle = 0, waited = 0;
+            double arrival = 0, previousDeparture = 0;
+            double totalService = 0, totalWait = 0, totalSystem = 0, totalIdle = 0;
+            int waited = 0;
 
             for (int i = 0; i < count; i++) {
-                int interarrival = random.nextInt(maxArrival - minArrival + 1) + minArrival;
-                int service = random.nextInt(maxService - minService + 1) + minService;
+                double interarrival = minArrival + random.nextDouble() * (maxArrival - minArrival);
+                double service = minService + random.nextDouble() * (maxService - minService);
                 arrival += interarrival;
-                int start = Math.max(arrival, previousDeparture);
-                int wait = start - arrival;
-                int departure = start + service;
-                int inSystem = departure - arrival;
+                double start = Math.max(arrival, previousDeparture);
+                double wait = start - arrival;
+                double departure = start + service;
+                double inSystem = departure - arrival;
 
                 totalIdle += Math.max(0, arrival - previousDeparture);
                 totalService += service;
                 totalWait += wait;
                 totalSystem += inSystem;
                 if (wait > 0) waited++;
-                rows[i] = new Object[]{i + 1, interarrival, arrival, service,
-                        start, wait, departure, inSystem};
+                rows[i] = new Object[]{i + 1, minutes(interarrival), minutes(arrival),
+                        minutes(service), minutes(start), minutes(wait),
+                        minutes(departure), minutes(inSystem)};
                 previousDeparture = departure;
             }
             showResults(rows, count, totalService, totalWait, totalSystem, totalIdle, waited);
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(frame,
-                    "Enter whole numbers from 1 to 10,000; each minimum must be no greater than its maximum.",
+                    "Enter 1–10,000 customers and positive decimal time limits; each minimum must not exceed its maximum.",
                     "Check the inputs", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void showResults(Object[][] rows, int count, int totalService, int totalWait,
-                             int totalSystem, int totalIdle, int waited) {
+    private static String minutes(double value) {
+        return String.format(java.util.Locale.US, "%.2f", value);
+    }
+
+    private void showResults(Object[][] rows, int count, double totalService, double totalWait,
+                             double totalSystem, double totalIdle, int waited) {
         JDialog results = new JDialog(frame, "Simulation Results", false);
         results.setLayout(new BorderLayout(0, 12));
 
-        JTextArea summary = new JTextArea(String.format(
+        JTextArea summary = new JTextArea(String.format(java.util.Locale.US,
                 "BANK QUEUE PERFORMANCE — %d CUSTOMERS, ONE TELLER%n" +
                 "Average service: %.2f min     Average waiting: %.2f min     Average time in system: %.2f min%n" +
-                "Customers who waited: %d (%.2f%%)     Total teller idle time: %d min",
-                count, totalService / (double) count, totalWait / (double) count,
-                totalSystem / (double) count, waited, waited * 100.0 / count, totalIdle));
+                "Customers who waited: %d (%.2f%%)     Total teller idle time: %.2f min",
+                count, totalService / count, totalWait / count,
+                totalSystem / count, waited, waited * 100.0 / count, totalIdle));
         summary.setEditable(false);
         summary.setFont(new Font("SansSerif", Font.PLAIN, 15));
         summary.setBackground(new Color(235, 244, 252));
@@ -132,7 +140,6 @@ public class BankQueueSimulation {
                 "Start", "Wait", "Departure", "In system"};
         JTable table = new JTable(rows, columns);
         table.setRowHeight(24);
-        table.setAutoCreateRowSorter(true);
         table.setFillsViewportHeight(true);
         results.add(new JScrollPane(table), BorderLayout.CENTER);
 

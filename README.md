@@ -9,7 +9,7 @@
 
 ## What the program does
 
-The bank has **one teller** and serves customers in arrival order. The setup screen defaults to 100 customers, interarrival times of 1–5 minutes, and service times of 1–6 minutes. The results screen shows the complete customer table and the queue statistics requested in the assignment.
+The bank has **one teller** and serves customers in arrival order. The setup screen defaults to 100 customers, interarrival times uniformly sampled between 1.0 and 5.0 minutes, and service times uniformly sampled between 1.0 and 6.0 minutes. Times are continuous decimal values, displayed to two decimal places. The results screen shows the complete customer table and the queue statistics requested in the assignment.
 
 ## Run in PowerShell
 
@@ -27,7 +27,7 @@ $env:Path = "C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot\bin;$env:
 ## How to explain the code
 
 1. `showSetup` creates the input screen for customer count and the two random time ranges.
-2. `runSimulation` checks the inputs, then generates each customer's interarrival and service time.
+2. `runSimulation` checks the inputs, then generates each customer's interarrival and service time with `minimum + random value × (maximum − minimum)`.
 3. Each new arrival time is the previous arrival plus the generated interarrival time. Service starts at the later of the customer's arrival and the previous customer's departure.
 4. Waiting time is service start minus arrival. Departure is service start plus service time. The program totals these values and teller idle time.
 5. `showResults` displays the customer table and calculates averages by dividing totals by the customer count. The waiting percentage is the number who waited divided by the customer count.
