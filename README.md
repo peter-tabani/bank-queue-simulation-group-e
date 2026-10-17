@@ -24,20 +24,5 @@ If PowerShell still cannot find Java after installation, open a new terminal or 
 $env:Path = "C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot\bin;$env:Path"
 ```
 
-## How to explain the code
 
-1. `showSetup` creates the input screen for customer count and the two random time ranges.
-2. `runSimulation` checks the inputs, then generates each customer's interarrival and service time with `minimum + random value × (maximum − minimum)`.
-3. Each new arrival time is the previous arrival plus the generated interarrival time. Service starts at the later of the customer's arrival and the previous customer's departure.
-4. Waiting time is service start minus arrival. Departure is service start plus service time. The program totals these values and teller idle time.
-5. `showResults` displays the customer table and calculates averages by dividing totals by the customer count. The waiting percentage is the number who waited divided by the customer count.
 
-The simulation uses random values, so the exact numbers change on each run.
-
-## Screenshots for submission
-
-- [Setup screen](screenshots/setup.png)
-- [Results screen with customer table](screenshots/results.png)
-- [Statistics summary](screenshots/statistics.png)
-
-These images show one completed run with the default inputs. A new run may produce different statistics.
